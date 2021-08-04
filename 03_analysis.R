@@ -25,11 +25,13 @@
 source('header.R')
 
 #Combine roads and disturbance areas - assign max weight to pixel
-disturbanceStack<-stack(roads_W,disturbance_W)
+disturbanceStack<-stack(roads_WP,disturbance_WP)
 
-resistance_surface<-max(disturbanceStack)
+resistance_surface<-max(disturbanceStack,na.rm=TRUE)
 writeRaster(resistance_surface, filename=file.path(CorrDir,'resistance_surface.tif'), format="GTiff", overwrite=TRUE)
 
+writeRaster(roads_W, filename=file.path(CorrDir,'roads_W.tif'), format="GTiff", overwrite=TRUE)
+writeRaster(disturbance_W, filename=file.path(CorrDir,'disturbance_W.tif'), format="GTiff", overwrite=TRUE)
 
 
 #Take the stack of human disturbance rasters and apply weights

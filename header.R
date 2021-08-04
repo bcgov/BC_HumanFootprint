@@ -7,6 +7,8 @@ library(rgdal)
 library(fasterize)
 library(readxl)
 library(mapview)
+library(WriteXLS)
+library(foreign)
 
 OutDir <- 'out'
 dataOutDir <- file.path(OutDir,'data')
@@ -16,7 +18,7 @@ spatialOutDir <- file.path(OutDir,'spatial')
 SpatialDir <- file.path('data','spatial')
 DataDir <- 'data'
 ESIDir <- file.path('/Users/darkbabine/Dropbox (BVRC)/Projects/ESI')
-CorrDir<-file.path('/Users/darkbabine/Dropbox (BVRC)/_dev/Biodiversity/BC_ConservationCorridors/data/spatial')
+CorrDir<-file.path('/Users/darkbabine/Dropbox (BVRC)/_dev/Biodiversity/BC_ConservationConnectivity/data/spatial')
 
 
 dir.create(file.path(OutDir), showWarnings = FALSE)

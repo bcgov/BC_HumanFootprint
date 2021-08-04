@@ -67,7 +67,10 @@ saveRDS(roads_sf, file = "tmp/DRA_roads_sf_clean.rds")
 write_sf(roads_sf, "out/data/roads_clean.gpkg")
 
 #Use Stars to rasterize according to RoadUse and save as a tif
-roadsSR<-st_rasterize(roads_sf["RoadUse"], BCr_S)
+#first st_rasterize needs a template to 'burn' the lines onto
+template = BCr_S
+template[[1]][] = NA
+roadsSR<-st_rasterize(roads_sf[,"RoadUse"], template)
 write_stars(roadsSR,dsn=file.path(spatialOutDir,'roadsSR.tif'))
 } else {
   #Read in raster roads with values 0-none, 1-high use, 2-moderate use, 3-low use)
@@ -82,15 +85,19 @@ roads_LUT<-data.frame(rdCode=c(1,2,3),weights=c(400,100,3))
 
 roads_W<-subs(roadsR_AOI,roads_LUT, by='rdCode', which='weights')
 
+roads_WP<-subs(roadsR, roads_LUT, by='rdCode', which='weights')
+
+
 ##############
 #Disturbance  Layer
-#Assign weights to layer - based on values in spreadsheet
-Disturbance_LUT <- as.data.frame(read_excel(file.path(DataDir,'Human.Footprint.Weights.xlsx'),sheet=2))
+#Assign weights to layer - based on values in spreadsheet built off raster's legend
+Disturbance_LUT<-data.frame(read_excel(file.path(dataOutDir,paste('disturbanceLegend.xlsx',sep='')))) %>%
+  dplyr::select(ID=VALUE,Weight)
 
 disturbance_R_AOI<-raster(file.path(spatialOutDir,'disturbance_R.tif')) %>%
   mask(AOI) %>%
   crop(AOI)
 
-disturbance_W<-subs(disturbance_R_AOI,Disturbance_LUT,by='Disturb_Code',which='weights')
-
+disturbance_W<-subs(disturbance_R_AOI, Disturbance_LUT, by='ID',which='Weight')
 #May add decay associated with roads...
+

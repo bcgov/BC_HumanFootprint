@@ -24,43 +24,17 @@
 
 source('header.R')
 
+#Assign resistance_surface
 #Combine roads and disturbance areas - assign max weight to pixel
 disturbanceStack<-stack(roads_WP,disturbance_WP)
 
-resistance_surface<-max(disturbanceStack,na.rm=TRUE)
-writeRaster(resistance_surface, filename=file.path(CorrDir,'resistance_surface.tif'), format="GTiff", overwrite=TRUE)
+resistance_surface<-max(disturbanceStack,na.rm=TRUE) %>%
+  mask(BCr) %>%
+  crop(BCr)
 
-writeRaster(roads_W, filename=file.path(CorrDir,'roads_W.tif'), format="GTiff", overwrite=TRUE)
-writeRaster(disturbance_W, filename=file.path(CorrDir,'disturbance_W.tif'), format="GTiff", overwrite=TRUE)
-
-
-#Take the stack of human disturbance rasters and apply weights
-#Then take maximum weight for each cell and pass as resistance surface to BC_ConservationCorridor
-
-
-
-
-
-
-#Combine Linear rasters portion of human footprint selecting max value
-LinearDecay<-max(LinearDecay01,LinearDecay05,LinearDecay10)
-writeRaster(LinearDecay, filename=file.path(spatialOutDir,paste("intactLayers/LinearDecay",sep="")), format="GTiff",overwrite=TRUE)
-LinearDecay<-raster(file.path(spatialOutDir,'intactLayers/LinearDecay.tif'))
-
-#Make Human Foot Print raster - max of 3 area based weight groups
-HF <- max(HF01,HF05,HF10, na.rm=TRUE)
-writeRaster(HF, filename=file.path(spatialOutDir,paste("intactLayers/HFootprint",sep="")), format="GTiff",overwrite=TRUE)
-HF<-raster(file.path(spatialOutDir,'intactLayers/HFootprint.tif'))
-
-#Make Human Foot Print raster - max of Human Footprint and Linear Feature surface
-
-HF_LD <- max(HF, LinearDecay, na.rm=TRUE)
-
-HF_LD<-HF_LD %>%
-  projectRaster(crs=Prov_crs, method='ngb')
-
-writeRaster(HF_LD, filename=file.path(spatialOutDir,paste("intactLayers/HFootprint_LinearDecay",sep="")), format="GTiff",overwrite=TRUE)
-
-
+#Assign source_surface
+source_surface<-source_WP %>%
+  mask(BCr) %>%
+  crop(BCr)
 
 

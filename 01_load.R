@@ -81,9 +81,10 @@ disturbance_R<-raster(file.path(SpatialDir,'Disturbance/raster/cefdist21.tif')) 
   resample(BCr,method='ngb') #allign raster to standard Provincial hectares BC base
 writeRaster(disturbance_R, filename=file.path(spatialOutDir,'disturbance_R.tif'), format="GTiff", overwrite=TRUE)
 
-disturbanceLegend<-read.dbf(file.path(SpatialDir,'Disturbance/raster/cefdist21.tif.vat.dbf'), as.is = FALSE)
+#Read in original dbf to get raster values - then write out and populate with resistenace and source values
+#disturbanceLegend<-read.dbf(file.path(SpatialDir,'Disturbance/raster/cefdist21.tif.vat.dbf'), as.is = FALSE)
 #Write back out to excel to populate with weights
-WriteXLS(disturbanceLegend,file.path(dataOutDir,paste('disturbanceLegend.xlsx',sep='')))
+#WriteXLS(disturbanceLegend,file.path(dataOutDir,paste('disturbance.xlsx',sep='')))
 
 ##########################
 #Layers for doing AOI for testing

@@ -25,8 +25,6 @@ source("02_clean.R")
 
 #read in user defined weighting table
 
-
-
 source("03_analysis.R")
 
 source("04_output.R")

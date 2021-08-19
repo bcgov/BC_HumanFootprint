@@ -29,12 +29,12 @@ source('header.R')
 disturbanceStack<-stack(roads_WP,disturbance_WP)
 
 resistance_surface<-max(disturbanceStack,na.rm=TRUE) %>%
-  mask(BCr) %>%
-  crop(BCr)
+    mask(AOI) %>%
+  crop(AOI)
 
 #Assign source_surface
 source_surface<-source_WP %>%
-  mask(BCr) %>%
-  crop(BCr)
+  mask(AOI) %>%
+  crop(AOI)
 
 

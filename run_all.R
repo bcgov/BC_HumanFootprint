@@ -14,10 +14,10 @@ source('header.R')
 
 #only run load if neccessary - clean
 #source("01_load.R")
-#Clips input too AOI - current options include:
-AOI <- ws %>%
-  filter(SUB_SUB_DRAINAGE_AREA_NAME == "Bulkley")
-#AOI <- BCr
+#Clips input to AOI - current options include:
+#AOI <- ws %>%
+#  filter(SUB_SUB_DRAINAGE_AREA_NAME == "Bulkley")
+AOI <- BCr
 #AOI <- ESI
 
 #clean will clip to AOI

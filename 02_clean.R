@@ -28,17 +28,19 @@ roads_sf_1<-roads_sf_in %>%
 
 HighUseCls<-c("arterial","highway", "ramp","freeway")
 ModUseCls<-c("local","collector","arterial" ,"recreation","alleyway","restricted",
-             "service","resource","driveway","strata","unclassified")
+             "service","resource","driveway","strata")
 LowUseCls<-c("lane","skid","trail","pedestrian","passenger")
 
 HighUseSurf<-c("paved")
-ModUseSurf<-c("loose","unknown","seasonal","rough")
-LowUseSurf<-c("overgrown","decommissioned")
+ModUseSurf<-c("loose")
+LowUseSurf<-c("overgrown","decommissioned","rough","seasonal","unknown")
 
 #Add new attribute that holds the use classification
 roads_sf <- roads_sf_1 %>%
   mutate(RoadUse = case_when((ROAD_CLASS %in% HighUseCls & ROAD_SURFACE %in% HighUseSurf) ~ 1, #high use
-                            (ROAD_CLASS %in% LowUseCls | ROAD_SURFACE %in% LowUseSurf) ~ 3,#low use
+                            (ROAD_CLASS %in% LowUseCls | ROAD_SURFACE %in% LowUseSurf |
+                               (ROAD_SURFACE %in% ModUseSurf & is.na(ROAD_NAME_FULL)) |
+                               (is.na(ROAD_CLASS) & is.na(ROAD_SURFACE))) ~ 3,#low use
                              TRUE ~ 2)) # all the rest are medium use
 
 #Check the assignment
@@ -64,7 +66,8 @@ write_stars(roadsSR,dsn=file.path(spatialOutDir,'roadsSR.tif'))
 }
 
 #Assign road weights for example: H-400, m-100, l-3 - based on values in the disturbance.xlsx spreadsheet
-LinearDisturbance_LUT<-data.frame(read_excel(file.path(dataOutDir,paste('disturbance.xlsx',sep='')),sheet='LinearDisturbance')) %>%
+#Example in the project root folder
+LinearDisturbance_LUT<-data.frame(read_excel(file.path(dataOutDir,paste('LinearDisturbance.xlsx',sep='')),sheet='LinearDisturbance')) %>%
   dplyr::select(ID,Resistance,SourceWt)
 
 #By AOI
@@ -80,17 +83,19 @@ roads_WP<-subs(roadsR, LinearDisturbance_LUT, by='ID',which='Resistance')
 ##############
 #Disturbance  Layer
 #Assign weights to layer - based on values in spreadsheet built off raster's legend
-AreaDisturbance_LUT<-data.frame(read_excel(file.path(dataOutDir,paste('disturbance.xlsx',sep='')),sheet='AreaDisturbance')) %>%
-  dplyr::select(ID=VALUE,Resistance,SourceWt)
+#Example in the project root folder
+AreaDisturbance_LUT<-data.frame(read_excel(file.path(dataOutDir,'AreaDisturbance_LUT.xlsx'))) %>%
+  dplyr::select(ID=disturb_Code,Resistance,SourceWt)
 
 #AOI weights
-disturbance_R_AOI<-raster(file.path(spatialOutDir,'disturbance_R.tif')) %>%
+disturbance_R_AOI<-raster(file.path(spatialOutDir,'disturbance_sfR.tif')) %>%
   mask(AOI) %>%
   crop(AOI)
 disturbance_W<-subs(disturbance_R_AOI, AreaDisturbance_LUT, by='ID',which='Resistance')
 
 #Provincial weights
-disturbance_WP<-subs(raster(file.path(spatialOutDir,'disturbance_R.tif')), AreaDisturbance_LUT, by='ID',which='Resistance')
+disturbance_WP<-subs(raster(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT, by='ID',which='Resistance')
+writeRaster(disturbance_WP, filename=file.path(spatialOutDir,'disturbance_WP'), format="GTiff", overwrite=TRUE)
 
 #May add decay associated with roads...
 
@@ -105,4 +110,5 @@ source_W<-subs(disturbance_R_AOI, AreaDisturbance_LUT, by='ID',which='SourceWt')
 
 #Provincial source
 source_WP<-subs(raster(file.path(spatialOutDir,'disturbance_R.tif')), AreaDisturbance_LUT, by='ID',which='SourceWt')
+writeRaster(source_WP, filename=file.path(spatialOutDir,'source_WP'), format="GTiff", overwrite=TRUE)
 

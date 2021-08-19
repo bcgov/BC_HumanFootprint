@@ -64,8 +64,40 @@ if (!file.exists(dist_file)) {
 
   disturbance_sf <- read_sf(disturbance_gdb, layer = "BC_CEF_Human_Disturbance_and_BTM_2019_Provincial_Merge")
   saveRDS(disturbance_sf,file=dist_file)
+  #Fasterize disturbance subgroup
+  disturbance_Tbl <- st_set_geometry(disturbance_sf, NULL) %>%
+    count(CEF_DISTURB_SUB_GROUP, CEF_DISTURB_GROUP)
+  #Fix non-unique sub group codes
+  disturbance_sf <- disturbance_sf %>%
+    mutate(disturb = case_when((!(CEF_DISTURB_SUB_GROUP %in% c('Baseline Thematic Mapping','TRIM Enhanced Base Map '))) ~ CEF_DISTURB_SUB_GROUP,
+                               (CEF_DISTURB_GROUP == 'Agriculture_and_Clearing' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'BTM - Agriculture_and_Clearing',
+                               (CEF_DISTURB_GROUP == 'Mining_and_Extraction' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'BTM - Mining_and_Extraction',
+                               (CEF_DISTURB_GROUP == 'Urban' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'BTM - Urban',
+                               (CEF_DISTURB_GROUP == 'Mining_and_Extraction' & CEF_DISTURB_SUB_GROUP == 'TRIM Enhanced Base Map ') ~ 'TRIM - Mining_and_Extraction',
+                               (CEF_DISTURB_GROUP == 'Urban' & CEF_DISTURB_SUB_GROUP == 'TRIM Enhanced Base Map ') ~ 'TRIM - Urban',
+                               TRUE ~ 'Unkown'))
+  disturbance_Tbl <- st_set_geometry(disturbance_sf, NULL) %>%
+    count(CEF_DISTURB_SUB_GROUP, CEF_DISTURB_GROUP, disturb)
+
+  Unique_disturb<-unique(disturbance_sf$disturb)
+  AreaDisturbance_LUT<-data.frame(disturb_Code=1:length(Unique_disturb),disturb=Unique_disturb)
+
+  #Write out LUT and populate with resistance weights and source scores
+  WriteXLS(AreaDisturbance_LUT,file.path(dataOutDir,'AreaDisturbance_LUT.xlsx'))
+
+  disturbance_sfR1 <- disturbance_sf %>%
+    left_join(disurbance_LUT) %>%
+    st_cast("MULTIPOLYGON")
+
+  disturbance_sfR<- fasterize(disturbance_sfR1, BCr, field="disturb_Code")
+
+  saveRDS(disturbance_sfR,file='tmp/disturbance_sfR')
+  writeRaster(disturbance_sfR, filename=file.path(spatialOutDir,'disturbance_sfR'), format="GTiff", overwrite=TRUE)
+
 } else {
   disturbance_sf<-readRDS(file=dist_file)
+  disturbance_sfR<-readRDS(file=file.path(spatialOutDir,'disturbance_sfR'))
+
 }
 
 #Error when clipping disturbance_sf - likely due to bad topology
@@ -121,6 +153,19 @@ st_crs(ws)<-3005
 saveRDS(ws, file = "tmp/ws")
 write_sf(ws, file.path(spatialOutDir,"ws.gpkg"))
 
+######
+#Load IBAs - not parsing correctly
+IBA_KMZ <- file.path(SpatialDir,'IBA/CanIBA.kmz')
+IBA_KML <-file.path(SpatialDir,'IBA/tmp_IBA.kml.zip')
+fs::file_copy(IBA_KMZ, IBA_KML, overwrite = TRUE)
+unzip(IBA_KML,exdir=file.path(SpatialDir,'IBA'),)
+IBA_AOI.dirty <- readOGR(file.path(SpatialDir,'IBA','CanIBA'))
+
+# cleanup the temp files
+IBA_AOI<-clgeo_Clean(IBA_AOI.dirty) %>%
+  as('sf') %>%
+  st_transform(st_crs(AOI))
+saveRDS(IBA_AOI, file = 'tmp/IBA_AOI')
 
 
 

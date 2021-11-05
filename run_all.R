@@ -13,12 +13,15 @@
 source('header.R')
 
 #only run load if neccessary - clean
-#source("01_load.R")
+source("01_load.R")
 #Clips input to AOI - current options include:
 #AOI <- ws %>%
 #  filter(SUB_SUB_DRAINAGE_AREA_NAME == "Bulkley")
-AOI <- BCr
+AOI <- BC
 #AOI <- ESI
+
+#AOI <- EcoRegions %>%
+#  filter(ECOREGION_NAME == "EASTERN HAZELTON MOUNTAINS")
 
 #clean will clip to AOI
 source("02_clean.R")

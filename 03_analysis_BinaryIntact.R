@@ -26,26 +26,18 @@ source('header.R')
 
 #Assign resistance_surface
 #Combine roads and disturbance areas - assign max weight to pixel
-disturbanceStack<-stack(roads_WP,disturbance_WP)
-resistance_surface_WP<-max(disturbanceStack,na.rm=TRUE)
-saveRDS(resistance_surface_WP,file='tmp/resistance_surface_WP')
+disturbanceB_WP<-raster(file.path(spatialOutDir,'disturbanceB_WP.tif'))
+roadsHR<-raster(file.path(spatialOutDir,'roadsHR.tif'))
+roadsMR<-raster(file.path(spatialOutDir,'roadsMR.tif'))
+roadsML<-raster(file.path(spatialOutDir,'roadsLR.tif'))
 
-resistance_surface<-resistance_surface_WP %>%
-    mask(AOI) %>%
-  crop(AOI)
+BinaryStack<-stack(disturbanceB_WP, roadsHR, roadsMR, roadsLR)
+HFBinary<-max(BinaryStack,na.rm=TRUE)
+IntactBinary<-HFBinary
+IntactBinary[IntactBinary>0]<-2
+IntactBinary[is.na(IntactBinary)]<-1
+IntactBinary[IntactBinary==2]<-NA
 
-#Assign source_surface
-source_surface<-source_WP %>%
-  mask(AOI) %>%
-  crop(AOI)
-
-#Make binary HF
-#Buffer roads by 500m
-roadsB_W[roadsB_W == 0] <- NA
-roadsB_buff <- buffer(roadsB_W, width=500)
-
-HumanFPStack<-stack(roadsB_buff,disturbanceB_WP)
-HumanFP_Binary<-max(HumanFPStack,na.rm=TRUE)
-writeRaster(HumanFP_Binary, filename=file.path(spatialOutDir,'HumanFP_Binary.tif'), format="GTiff", overwrite=TRUE)
+writeRaster(IntactBinary, filename=file.path(spatialOutDir,'IntactBinary.tif'), format="GTiff", overwrite=TRUE)
 
 

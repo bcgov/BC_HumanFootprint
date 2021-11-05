@@ -9,6 +9,10 @@ library(readxl)
 library(mapview)
 library(WriteXLS)
 library(foreign)
+library(ggplot2)
+library(ggnewscale)
+library(viridis)
+library(stars)
 
 OutDir <- 'out'
 dataOutDir <- file.path(OutDir,'data')
@@ -19,6 +23,8 @@ SpatialDir <- file.path('data','spatial')
 DataDir <- 'data'
 ESIDir <- file.path('/Users/darkbabine/Dropbox (BVRC)/Projects/ESI')
 CorrDir<-file.path('/Users/darkbabine/Dropbox (BVRC)/_dev/Biodiversity/BC_ConservationConnectivity/data/spatial')
+GISLibrary<- file.path('/Users/darkbabine/ProjectLibrary/Library/GISFiles/BC')
+NALibrary<- file.path('/Users/darkbabine/Dropbox (BVRC)/_dev/Biodiversity/data')
 
 
 dir.create(file.path(OutDir), showWarnings = FALSE)

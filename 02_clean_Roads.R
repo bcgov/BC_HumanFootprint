@@ -17,6 +17,24 @@ if (!file.exists(roads_file)) {
   #Check the types
   unique(roads_sf_in$ROAD_CLASS)
   unique(roads_sf_in$ROAD_SURFACE)
+  unique(roads_sf_1$PETRLM_ACCESS_ROAD_TYPE)
+  table(roads_sf_in$ROAD_SURFACE,roads_sf_in$PETRLM_ACCESS_ROAD_TYPE)
+
+#Assign surface and class to petro roads
+  #Check if all petro roads have a PETRLM_ACCESS_ROAD_TYPE
+ tt<-roads_sf_in %>%
+  st_drop_geometry() %>%
+  dplyr::filter(is.na(ROAD_CLASS))
+
+  Petro_Tbl <- st_set_geometry(roads_sf_in, NULL) %>%
+    count(PETRLM_ACCESS_ROAD_TYPE, rd_len)
+
+  roads_sf_petro <- roads_sf_in %>%
+    mutate(ROAD_SURFACE=if_else(is.na(OG_PETRLM_ACCESS_ROAD_PUB_ID),ROAD_SURFACE,'OGC')) %>%
+    mutate(ROAD_CLASS=if_else(is.na(OG_PETRLM_ACCESS_ROAD_PUB_ID),ROAD_CLASS,PETRLM_ACCESS_ROAD_TYPE))
+
+  Petro_Tbl <- st_set_geometry(roads_sf_petro, NULL) %>%
+    count(ROAD_SURFACE, ROAD_CLASS)
 
   #Eliminate non-roads
   notRoadsCls <- c("ferry", "water", "proposed")
@@ -51,7 +69,7 @@ if (!file.exists(roads_file)) {
 
   # Save as RDS for quicker access later.
   saveRDS(roads_sf, file = "tmp/DRA_roads_sf_clean.rds")
-  # Also save as geopackage format for use in GIS
+  # Also save as geopackage format for use in GIS and for buffer anlaysis below
   write_sf(roads_sf, "out/data/roads_clean.gpkg")
   roads_sf<-readRDS(file = "tmp/DRA_roads_sf_clean.rds")
 
@@ -66,28 +84,22 @@ if (!file.exists(roads_file)) {
   roadsR<-raster(file.path(spatialOutDir,'roadsSR.tif'))
 }
 
-#Assign road weights for example: H-400, m-100, l-3 - based on values in the disturbance.xlsx spreadsheet
-#Example in the project root folder
-LinearDisturbance_LUT<-data.frame(read_excel(file.path(dataOutDir,paste('LinearDisturbance.xlsx',sep='')),sheet='LinearDisturbance')) %>%
+#Assign road weights for example: H-400, m-100, l-3 - based on values in the disturbance.xlsx spreadsheet in data directory
+#Example in data directory Archive folder
+LinearDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,paste('LinearDisturbance.xlsx',sep='')),sheet='LinearDisturbance')) %>%
   dplyr::select(ID,Resistance,SourceWt,BinaryHF)
-
-#By AOI
-roadsR_AOI<-roadsR %>%
-  mask(AOI) %>%
-  crop(AOI)
-#roads_LUT<-data.frame(rdCode=c(1,2,3),weights=c(400,100,3))
-roads_W<-subs(roadsR_AOI, LinearDisturbance_LUT, by='ID',which='Resistance')
 
 #By Prov
 roads_WP<-subs(roadsR, LinearDisturbance_LUT, by='ID',which='Resistance')
 writeRaster(roads_WP, filename=file.path(spatialOutDir,'roads_WP'), format="GTiff", overwrite=TRUE)
-roads_WP<-raster(file.path(spatialOutDir,'roads_WP.tif'))
+#Do Binary version
 roadsB_W<-subs(roadsR, LinearDisturbance_LUT, by='ID',which='BinaryHF')
 writeRaster(roadsB_W, filename=file.path(spatialOutDir,'roadsB_W'), format="GTiff", overwrite=TRUE)
 
 #########
 #Do similar analysis but split into 3 rasters, High(1), Med(2), Low(3)
 #Generate buffers for each 500m for 1 100m annd 500m for 2 and 50m for 3
+#Use gpkg created above
 roads_clean<-st_read(file.path(NALibrary,'Disturbance/roads_clean.gpkg'))
 
 roadsH<-roads_clean %>%
@@ -151,62 +163,13 @@ roadsLR[roadsLR==3]<-1
 writeRaster(roadsLR, filename=file.path(spatialOutDir,'roadsLR'), format="GTiff", overwrite=TRUE)
 
 ##############
-#Disturbance  Layer
-#Assign weights to layer - based on values in spreadsheet built off raster's legend
-#Example in the project root folder
-AreaDisturbance_LUT<-data.frame(read_excel(file.path(dataOutDir,'AreaDisturbance_LUT.xlsx'))) %>%
-  dplyr::select(ID=disturb_Code,Resistance,SourceWt, BinaryHF)
-
-#AOI weights
-disturbance_R_AOI<-raster(file.path(spatialOutDir,'disturbance_sfR.tif')) %>%
+#Clip by AOI
+roadsR_AOI<-roadsR %>%
   mask(AOI) %>%
   crop(AOI)
-writeRaster(disturbance_R_AOI, filename=file.path(spatialOutDir,'Prov_HumanDisturb'), format="GTiff", overwrite=TRUE)
-disturbance_W<-subs(disturbance_R_AOI, AreaDisturbance_LUT, by='ID',which='Resistance')
-
-#Provincial weights
-disturbance_WP<-subs(raster(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT, by='ID',which='Resistance')
-writeRaster(disturbance_WP, filename=file.path(spatialOutDir,'disturbance_WP'), format="GTiff", overwrite=TRUE)
-disturbance_WP<-raster(file.path(spatialOutDir,'disturbance_WP.tif'))
-
-disturbanceB_WP<-subs(raster(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT, by='ID',which='BinaryHF')
-disturbanceB_WP[disturbanceB_WP==0]<-NA
-
-writeRaster(disturbanceB_WP, filename=file.path(spatialOutDir,'disturbanceB_WP'), format="GTiff", overwrite=TRUE)
+#roads_LUT<-data.frame(rdCode=c(1,2,3),weights=c(400,100,3))
+roads_W<-subs(roadsR_AOI, LinearDisturbance_LUT, by='ID',which='Resistance')
+writeRaster(roads_W, filename=file.path(spatialOutDir,'roads_W'), format="GTiff", overwrite=TRUE)
 
 
-#May add decay associated with roads...
 
-##############
-#Source  Layer
-#Assign source weights to layer - based on values in spreadsheet built off raster's legend
-#uses same layer disturbance layer but assigns different values
-
-#AOI source
-source_R_AOI<-disturbance_R_AOI
-source_W<-subs(disturbance_R_AOI, AreaDisturbance_LUT, by='ID',which='SourceWt')
-
-#Provincial source
-source_WP<-subs(raster(file.path(spatialOutDir,'disturbance_R.tif')), AreaDisturbance_LUT, by='ID',which='SourceWt')
-writeRaster(source_WP, filename=file.path(spatialOutDir,'source_WP'), format="GTiff", overwrite=TRUE)
-source_WP<-raster(file.path(spatialOutDir,'source_WP.tif'))
-
-#Clip map features
-parks2017<-readRDS(file= 'tmp/parks2017') %>%
-  st_buffer(dist=0) %>%
-  st_intersection(AOI)
-saveRDS(parks2017, file = 'tmp/AOI/parks2017')
-
-HillShade <-raster(file.path(GISLibrary,'GRIDS/hillshade_BC.tif')) %>%
-  mask(AOI) %>%
-  crop(AOI)
-
-lakes<-readRDS(file= 'tmp/lakes') %>%
-  st_buffer(dist=0) %>%
-  st_intersection(AOI)
-saveRDS(lakes, file = 'tmp/AOI/lakes')
-
-rivers<-readRDS(file= 'tmp/rivers') %>%
-  st_buffer(dist=0) %>%
-  st_intersection(AOI)
-saveRDS(rivers, file = 'tmp/AOI/rivers')

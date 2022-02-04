@@ -49,6 +49,54 @@ resistance_surface_df <- resistance_surface_df %>%
 #Make mask for 1 & 2 category
 resistance_mask<-resistance_surface_df[resistance_surface_df$layer %in% c(1,2),]
 
+#Map features FWLKSPL_polygon
+lakes<-read_sf(file.path(GISLibrary,'shapefiles/WaterFeatures/lakes_bc/CWB_LAKES/CWB_LAKES.shp'))
+saveRDS(lakes, file = 'tmp/lakes')
+
+rivers<-read_sf(file.path(GISLibrary,'shapefiles/WaterFeatures/doubleline_rivers_bc/CWB_RIVERS/CWB_RIVERS.shp'))
+saveRDS(rivers, file = 'tmp/rivers')
+
+#Hill shade for draping
+HillShade<-raster(file.path(GISLibrary,'GRIDS/hillshade_BC.tif'))
+
+#Conservancies for source layer
+#can modify to include other conservancies and intact lands
+parks2017R_file <- file.path(spatialOutDir,"parks2017R.tif")
+if (!file.exists(parks2017R_file)) {
+  parks2017i<-readOGR(file.path(SpatialDir,"ConservationAreas/designated_lands_dissolved_2017-06-27/designated_lands_dissolved.shp"),"designated_lands_dissolved") %>%
+    as('sf') %>%
+    st_transform(3005)
+  parkCats<-data.frame(CATEGORY=unique(parks2017i$CATEGORY), CatN=1:4)
+  parks2017<-parks2017i %>%
+    left_join(parkCats) %>%
+    dplyr::filter(CatN==1) #rasterize only PPA
+  parks2017R<-fasterize(parks2017,ProvRast,field="CatN")
+  writeRaster(parks2017R, filename=file.path(spatialOutDir,"parks2017R.tif"), format="GTiff", overwrite=TRUE)
+  saveRDS(parks2017,file='tmp/parks2017')
+} else {
+  parks2017R<-raster(file.path(spatialOutDir,"parks2017R.tif"), format="GTiff")
+  parks2017<-readRDS(file='tmp/parks2017')
+}
+#Clip map features
+parks2017<-readRDS(file= 'tmp/parks2017') %>%
+  st_buffer(dist=0) %>%
+  st_intersection(AOI)
+saveRDS(parks2017, file = 'tmp/AOI/parks2017')
+
+HillShade <-raster(file.path(GISLibrary,'GRIDS/hillshade_BC.tif')) %>%
+  mask(AOI) %>%
+  crop(AOI)
+
+lakes<-readRDS(file= 'tmp/lakes') %>%
+  st_buffer(dist=0) %>%
+  st_intersection(AOI)
+saveRDS(lakes, file = 'tmp/AOI/lakes')
+
+rivers<-readRDS(file= 'tmp/rivers') %>%
+  st_buffer(dist=0) %>%
+  st_intersection(AOI)
+saveRDS(rivers, file = 'tmp/AOI/rivers')
+
 #png(file=file.path(figsOutDir,"Resistance.png"), units='mm', res = 1200)
 pdf(file=file.path(figsOutDir,"Resistance.pdf"))
 ggplot() +

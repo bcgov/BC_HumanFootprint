@@ -47,12 +47,14 @@ internal.R
 /data/
 *.tif
 *.jl
+*.xlsx
 
 #Figures
 /graphics/
 *.png
 *.html
 *.pdf
+*.xlsx
 .DS_Store
 #/out*/
 /tmp*/

@@ -13,6 +13,7 @@ library(ggplot2)
 library(ggnewscale)
 library(viridis)
 library(stars)
+library(RCurl)
 
 OutDir <- 'out'
 dataOutDir <- file.path(OutDir,'data')
@@ -21,11 +22,10 @@ figsOutDir <- file.path(OutDir,'figures')
 spatialOutDir <- file.path(OutDir,'spatial')
 SpatialDir <- file.path('data','spatial')
 DataDir <- 'data'
-ESIDir <- file.path('/Users/darkbabine/Dropbox (BVRC)/Projects/ESI')
-CorrDir<-file.path('/Users/darkbabine/Dropbox (BVRC)/_dev/Biodiversity/BC_ConservationConnectivity/data/spatial')
+#Change this to a local path for storing footprint data as input to conservation connectivity model
+CorrDir<- file.path('/Users/darkbabine/Biodiversity/BC_ConservationConnectivity/data/spatial')
+#Local directory of GIS files such as HillShade for plotting
 GISLibrary<- file.path('/Users/darkbabine/ProjectLibrary/Library/GISFiles/BC')
-NALibrary<- file.path('/Users/darkbabine/Dropbox (BVRC)/_dev/Biodiversity/data')
-
 
 dir.create(file.path(OutDir), showWarnings = FALSE)
 dir.create(file.path(dataOutDir), showWarnings = FALSE)

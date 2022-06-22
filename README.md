@@ -16,53 +16,52 @@ McRae et al 2016
 This analysis uses the Province’s Cumulative Effects consolidated roads
 and disturbance layers.
 
-The consolidated roads are based on the British Columbia [Digital Road
-Atlas available from the B.C. Data
+The consolidated roads are available from the B.C. Data Catalogue
+(<https://catalogue.data.gov.bc.ca/dataset/ce-roads-2021>). They are
+based on the British Columbia [Digital Road Atlas available from the
+B.C. Data
 Catalogue]((https://catalogue.data.gov.bc.ca/dataset/bb060417-b6e6-4548-b837-f9060d94743e))
 and distributed under the [Access Only - B.C. Crown
 Copyright](https://www2.gov.bc.ca/gov/content?id=1AAACC9C65754E4D89A118B875E0FBDA)
-licence. The Digital Road Atlas is a [single, authoritative source of
-road data for the Province of
-B.C.](https://www2.gov.bc.ca/gov/content?id=21FFEC94B0AD40818D2D2AF06D522714)
-Metadata details for the Digital Road Atlas (DRA) are available in PDF
-format from the [B.C. Data
-Catalogue](https://catalogue.data.gov.bc.ca/dataset/bb060417-b6e6-4548-b837-f9060d94743e).
+licence.
 
-The consolidated disturbance uses a combination of Base Line Thematic
-Mapping (BTM), the Province’s VRI, TRIM, OGC seismic and infrastructure
-and FAIB cutblocks. (more detail to be added)
+The consolidated disturbance is available from the B.C. Data Catalogue
+(<https://catalogue.data.gov.bc.ca/dataset/ce-disturbance-2021>). added)
 
 ### Usage
 
-There are four core scripts that are required for the analysis, a
+There are a set of core scripts that are required for the analysis, a
 run_all.R script is used to control their execution:
 
--   01_clean.R
--   02_analysis.R
--   03_visualize.R
+-   01_load.R
+-   02_clean_Area.R
+-   02_clean_Raods.R
+-   03_analysis.R
+-   03_analysis_BinaryIntact.R
 -   04_output.R
 
-The repo requires a disturbance raster and roads layer be in the
-data/spatial directory. An excel spreadsheet of disturbance and source
-weights should be in the data directory. An area of interest (AOI) can
-be used to clip data for testing. Running Provincial scale analysis
-takes longer to run.
+The repo will download the CE disturbance and road layers from the BC
+Data Catalogue. An excel spreadsheet of disturbance and source weights
+should be in the data directory. An area of interest (AOI) can be used
+to clip data for testing - links to EcoSection, EcoRegion and watersheds
+are provided. Warning Provincial scale analysis is computationally
+intensive.
 
 ### Project Status
 
 This project is part of a Provincial conservation assessment being led
 by the Ministry of Environment and Climate Change Strategy. The analysis
-is exploratory and will be added to and updated over the coming months.
+is exploratory.
 
 Updates to the disturbance layer is required, including: seperating
-urban into 1) high, 2) low density, and 3) rural; Modifiying cut blocks
+urban into 1) high, 2) low density, and 3) rural; Modifying cut blocks
 by age to have recent and historic; Modifying range to differentiate
 front and back country range.
 
 Roads are rasterized at 100m and assumes that the ‘footprint’ of a road
 extends 50m on either side of the mid line. Potential modifications
-include generating a distance to road surface assigned a decay value
-based on road type.
+include generating a distance to road surface with an assigned a decay
+value based on road type.
 
 Other modifications include buffering water and ocean and applying
 varying weights based on distance from shore.

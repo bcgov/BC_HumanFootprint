@@ -41,20 +41,48 @@ if (!file.exists(BCr_file)) {
 }
 
 #################
-#processed roads from bc_raster_roads repo
-#Need to split roads into high-medium-low use rasters for assigning footprint weights
-#Roads<-raster(file.path(SpatialDir,'RoadDensR.tif'), crs=Prov_crs)
-#crs(Roads)  <- Prov_crs
-roads_sf_in <- readRDS(file.path(NALibrary,"Disturbance/Integrated_roads_sf.rds"))
+#Function to download to local directory - https://stackoverflow.com/questions/14426359/downloading-large-files-with-r-rcurl-efficiently
+CE_downloadFn = function(url, file){
+  library('RCurl')
+  f = CFILE(file, mode="wb")
+  a = curlPerform(url = url, writedata = f@ref, noprogress=FALSE)
+  close(f)
+  return(a)
+}
+
+rd_file<-'tmp/roads_sf_in'
+if (!file.exists(rd_file)) {
+  #Download CE road data
+  CE_downloadFn("https://nrs.objectstore.gov.bc.ca/bsmheo/BC_CEF_Integrated_Roads_2021.gdb.zip",
+                file.path(SpatialDir,"CE_Roads_2021.zip"))
+  #Unzip and put gdb in local SpatialDir
+  unzip(file.path(SpatialDir,"CE_Roads_2021.zip"), exdir = SpatialDir)
+
+  #Read gdb and select layer for sf_read
+  Roads_gdb <- list.files(file.path(SpatialDir), pattern = "_Roads_", full.names = TRUE)[1]
+  st_layers(file.path(Roads_gdb))
+
+  roads_sf_in <- read_sf(Roads_gdb, layer = "integrated_roads_2021")
+  saveRDS(roads_sf_in,file=rd_file)
+} else {
+  roads_sf_in<-readRDS(file=rd_file)
+}
 
 #Provincial Human Disturbance Layers - compiled for CE
 #Needs refinement to differentiate rural/urban and old vs young cutblocks, rangeland, etc.
 dist_file<-'tmp/disturbance_sf'
 if (!file.exists(dist_file)) {
-  disturbance_gdb <- list.files(file.path(NALibrary, "Disturbance/CEF_Disturbance/Disturbance_2021"), pattern = ".gdb", full.names = TRUE)[1]
-  disturbance_list <- st_layers(disturbance_gdb)
+  #Download CE disturbance data
+  CE_downloadFn("https://nrs.objectstore.gov.bc.ca/bsmheo/BC_CEF_Human_Disturbance_2021.gdb.zip",
+                                  file.path(SpatialDir,"CE_Disturb_2021.zip"))
+  #Unzip and put gdb in local SpatialDir
+  unzip(file.path(SpatialDir,"CE_Disturb_2021.zip"), exdir = SpatialDir)
 
-  disturbance_sf <- read_sf(disturbance_gdb, layer = "BC_CEF_Human_Disturb_BTM_2021_merge")
+  #Read gdb and select layer for sf_read
+  disturbance_gdb <- list.files(file.path(SpatialDir), pattern = "_Disturbance_", full.names = TRUE)[1]
+  st_layers(BC_CEF_Human_Disturbance_2021.gdb)
+
+  disturbance_sf <- read_sf(BC_CEF_Human_Disturbance_2021.gdb, layer = "BC_CEF_Human_Disturb_BTM_2021_merge")
   saveRDS(disturbance_sf,file=dist_file)
   disturbance_sf<-readRDS(file=dist_file)
   #Fasterize disturbance subgroup
@@ -97,19 +125,13 @@ AreaDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,'AreaDisturbance_LU
 } else {
   disturbance_sf<-readRDS(file=dist_file)
   disturbance_sfR<-raster(file.path(spatialOutDir,'disturbance_sfR.tif'))
-
 }
 
 
 ##########################
 #Layers for doing AOI for testing and printing
 
-#Ecosections
-EcoS_file <- file.path("tmp/EcoS")
-ESin <- read_sf(file.path(SpatialDir,'Ecosections/Ecosections.shp')) %>%
-  st_transform(3005)
-EcoS <- st_cast(ESin, "MULTIPOLYGON")
-saveRDS(EcoS, file = EcoS_file)
+EcoS<-bcmaps::ecosections()
 
 #EcoRegions
 EcoRegions<-bcmaps::ecoregions()

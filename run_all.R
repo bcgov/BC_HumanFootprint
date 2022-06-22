@@ -16,19 +16,18 @@ source('header.R')
 source("01_load.R")
 #Clips input to AOI - current options include:
 AOI <- BC #Province
-
 #AOI <- ws %>% #Watershed
 #  filter(SUB_SUB_DRAINAGE_AREA_NAME == "Bulkley")
-
 #AOI <- EcoRegions %>% #EcoRegion
 #  filter(ECOREGION_NAME == "EASTERN HAZELTON MOUNTAINS")
 
 #clean will clip to AOI
-source("02_clean.R")
-
-#read in user defined weighting table
+source("02_clean_Area.R")
+source("02_clean_Roads.R")
 
 source("03_analysis.R")
+#run it you want to use for doing binary intact lands
+source("03_analysis_BinaryIntact.R")
 
 source("04_output.R")
 

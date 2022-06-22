@@ -13,7 +13,6 @@
 #Clean Disturbance  Layer
 
 #Assign weights to layer - based on values in spreadsheet built off raster's legend in data directory
-#Example in the data/Archive folder
 AreaDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,'AreaDisturbance_LUT.xlsx'))) %>%
   dplyr::select(ID=disturb_Code,Resistance,SourceWt, BinaryHF)
 
@@ -36,8 +35,6 @@ writeRaster(disturbanceB_WP, filename=file.path(spatialOutDir,'disturbanceB_WP')
 #Provincial source
 source_WP<-subs(raster(file.path(spatialOutDir,'disturbance_R.tif')), AreaDisturbance_LUT, by='ID',which='SourceWt')
 writeRaster(source_WP, filename=file.path(spatialOutDir,'source_WP'), format="GTiff", overwrite=TRUE)
-
-
 
 ##################
 ##Clipping to AOI

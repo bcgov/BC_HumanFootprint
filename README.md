@@ -26,7 +26,7 @@ Copyright](https://www2.gov.bc.ca/gov/content?id=1AAACC9C65754E4D89A118B875E0FBD
 licence.
 
 The consolidated disturbance is available from the B.C. Data Catalogue
-(<https://catalogue.data.gov.bc.ca/dataset/ce-disturbance-2021>). added)
+(<https://catalogue.data.gov.bc.ca/dataset/ce-disturbance-2021>).
 
 ### Usage
 

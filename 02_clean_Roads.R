@@ -15,34 +15,40 @@
 roads_file <- file.path(spatialOutDir,"roadsSR.tif")
 if (!file.exists(roads_file)) {
   #Check the types
-  unique(roads_sf_in$ROAD_CLASS)
-  unique(roads_sf_in$ROAD_SURFACE)
-  unique(roads_sf_1$PETRLM_ACCESS_ROAD_TYPE)
-  table(roads_sf_in$ROAD_SURFACE,roads_sf_in$PETRLM_ACCESS_ROAD_TYPE)
+  unique(roads_sf_in$DRA_ROAD_CLASS)
+  unique(roads_sf_in$DRA_ROAD_SURFACE)
+  unique(roads_sf_in$OG_DEV_PRE06_PETRLM_DEVELOPMENT_ROAD_TYPE)
 
-#Assign surface and class to petro roads
-  #Check if all petro roads have a PETRLM_ACCESS_ROAD_TYPE
+
+### Check Petro roads
+#Appears petro roads are typed with SURFACE and CLASSS
+  table(roads_sf_in$DRA_ROAD_SURFACE,roads_sf_in$OG_DEV_PRE06_PETRLM_DEVELOPMENT_ROAD_TYPE)
+  table(roads_sf_in$DRA_ROAD_CLASS,roads_sf_in$OG_DEV_PRE06_PETRLM_DEVELOPMENT_ROAD_TYPE)
+
+#Additional petro road checks
+  #Check if all petro roads have a OG_DEV_PRE06_PETRLM_DEVELOPMENT_ROAD_TYPE
  tt<-roads_sf_in %>%
   st_drop_geometry() %>%
-  dplyr::filter(is.na(ROAD_CLASS))
+  dplyr::filter(is.na(DRA_ROAD_CLASS))
 
   Petro_Tbl <- st_set_geometry(roads_sf_in, NULL) %>%
-    count(PETRLM_ACCESS_ROAD_TYPE, rd_len)
+    count(OG_DEV_PRE06_PETRLM_DEVELOPMENT_ROAD_TYPE, LENGTH_METRES)
 
   roads_sf_petro <- roads_sf_in %>%
-    mutate(ROAD_SURFACE=if_else(is.na(OG_PETRLM_ACCESS_ROAD_PUB_ID),ROAD_SURFACE,'OGC')) %>%
-    mutate(ROAD_CLASS=if_else(is.na(OG_PETRLM_ACCESS_ROAD_PUB_ID),ROAD_CLASS,PETRLM_ACCESS_ROAD_TYPE))
+    mutate(DRA_ROAD_SURFACE=if_else(is.na(OG_DEV_PRE06_OG_PETRLM_DEV_RD_PRE06_PUB_ID),DRA_ROAD_SURFACE,'OGC')) %>%
+    mutate(DRA_ROAD_CLASS=if_else(is.na(OG_DEV_PRE06_OG_PETRLM_DEV_RD_PRE06_PUB_ID),DRA_ROAD_CLASS,OG_DEV_PRE06_PETRLM_DEVELOPMENT_ROAD_TYPE))
 
   Petro_Tbl <- st_set_geometry(roads_sf_petro, NULL) %>%
-    count(ROAD_SURFACE, ROAD_CLASS)
+    count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS)
+#### End Petro road check
 
-  #Eliminate non-roads
+#Eliminate non-roads
   notRoadsCls <- c("ferry", "water", "proposed")
   notRoadsSurf<-c("boat")
 
   roads_sf_1<-roads_sf_in %>%
-    filter(!ROAD_CLASS %in% notRoadsCls,
-           !ROAD_SURFACE %in% notRoadsSurf)
+    filter(!DRA_DRA_ROAD_CLASS %in% notRoadsCls,
+           !DRA_ROAD_SURFACE %in% notRoadsSurf)
 
   HighUseCls<-c("arterial","highway", "ramp","freeway")
   ModUseCls<-c("local","collector","arterial" ,"recreation","alleyway","restricted",
@@ -55,15 +61,15 @@ if (!file.exists(roads_file)) {
 
   #Add new attribute that holds the use classification
   roads_sf <- roads_sf_1 %>%
-    mutate(RoadUse = case_when((ROAD_CLASS %in% HighUseCls & ROAD_SURFACE %in% HighUseSurf) ~ 1, #high use
-                               (ROAD_CLASS %in% LowUseCls | ROAD_SURFACE %in% LowUseSurf |
-                                  (ROAD_SURFACE %in% ModUseSurf & is.na(ROAD_NAME_FULL)) |
-                                  (is.na(ROAD_CLASS) & is.na(ROAD_SURFACE))) ~ 3,#low use
+    mutate(RoadUse = case_when((DRA_ROAD_CLASS %in% HighUseCls & DRA_ROAD_SURFACE %in% HighUseSurf) ~ 1, #high use
+                               (DRA_ROAD_CLASS %in% LowUseCls | DRA_ROAD_SURFACE %in% LowUseSurf |
+                                  (DRA_ROAD_SURFACE %in% ModUseSurf & is.na(ROAD_NAME_FULL)) |
+                                  (is.na(DRA_ROAD_CLASS) & is.na(DRA_ROAD_SURFACE))) ~ 3,#low use
                                TRUE ~ 2)) # all the rest are medium use
 
   #Check the assignment
   Rd_Tbl <- st_set_geometry(roads_sf, NULL) %>%
-    count(ROAD_SURFACE, ROAD_CLASS, RoadUse)
+    count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS, RoadUse)
 
   nrow(roads_sf)-nrow(roads_sf_1)
 

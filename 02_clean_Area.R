@@ -33,7 +33,7 @@ writeRaster(disturbanceB_WP, filename=file.path(spatialOutDir,'disturbanceB_WP')
 #uses same layer disturbance layer but assigns different values
 
 #Provincial source
-source_WP<-subs(raster(file.path(spatialOutDir,'disturbance_R.tif')), AreaDisturbance_LUT, by='ID',which='SourceWt')
+source_WP<-subs(raster(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT, by='ID',which='SourceWt')
 writeRaster(source_WP, filename=file.path(spatialOutDir,'source_WP'), format="GTiff", overwrite=TRUE)
 
 ##################

@@ -76,7 +76,8 @@ if (!file.exists(roads_file)) {
   # Save as RDS for quicker access later.
   saveRDS(roads_sf, file = "tmp/DRA_roads_sf_clean.rds")
   # Also save as geopackage format for use in GIS and for buffer anlaysis below
-  write_sf(roads_sf, "out/data/roads_clean.gpkg")
+  write_sf(roads_sf, file.path(spatialOutDir,"roads_clean.gpkg"))
+
   roads_sf<-readRDS(file = "tmp/DRA_roads_sf_clean.rds")
 
   #Use Stars to rasterize according to RoadUse and save as a tif
@@ -106,7 +107,7 @@ writeRaster(roadsB_W, filename=file.path(spatialOutDir,'roadsB_W'), format="GTif
 #Do similar analysis but split into 3 rasters, High(1), Med(2), Low(3)
 #Generate buffers for each 500m for 1 100m annd 500m for 2 and 50m for 3
 #Use gpkg created above
-roads_clean<-st_read(file.path(NALibrary,'Disturbance/roads_clean.gpkg'))
+roads_clean<-st_read(file.path(spatialOutDir,"roads_clean.gpkg"))
 
 roadsH<-roads_clean %>%
   #st_drop_geometry() %>%

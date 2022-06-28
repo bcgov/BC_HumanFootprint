@@ -43,35 +43,44 @@ if (!file.exists(roads_file)) {
 #### End Petro road check
 
 #Eliminate non-roads
-  notRoadsCls <- c("ferry", "water", "proposed")
+  notRoadsCls <- c("ferry", "water", "Road Proposed")
   notRoadsSurf<-c("boat")
 
   roads_sf_1<-roads_sf_in %>%
-    filter(!DRA_DRA_ROAD_CLASS %in% notRoadsCls,
+    filter(!DRA_ROAD_CLASS %in% notRoadsCls,
            !DRA_ROAD_SURFACE %in% notRoadsSurf)
 
-  HighUseCls<-c("arterial","highway", "ramp","freeway")
-  ModUseCls<-c("local","collector","arterial" ,"recreation","alleyway","restricted",
-               "service","resource","driveway","strata")
-  LowUseCls<-c("lane","skid","trail","pedestrian","passenger")
+  HighUseCls<-c("Road arterial major","Road highway mabjor", "Road arterial minor","Road highway minor",
+                "Road collector major","Road collector minor","Road ramp","Road freeway",
+                "Road yield lane")
+
+   ModUseCls<-c("Road local","Road recreation","Road alleyway","Road restricted",
+               "Road service","Road resource","Road driveway","Road strata",
+               "Road resource demographic", "Road strata","Road recreation demographic", "Trail Recreation",
+               "Road runway", "Road runway non-demographic", "Road resource non-status" )
+
+  LowUseCls<-c("Road lane","Road skid","Road trail","Road pedestrian","Road passenger",
+               "Road unclassified or unknown","Trail", "Trail demographic","Trail skid", "Road pedestrian mall")
 
   HighUseSurf<-c("paved")
-  ModUseSurf<-c("loose")
-  LowUseSurf<-c("overgrown","decommissioned","rough","seasonal","unknown")
+  ModUseSurf<-c("loose","rough")
+  LowUseSurf<-c("overgrown","decommissioned","seasonal","unknown")
 
-  #Add new attribute that holds the use classification
+  #Add new attribute that holds the use classificationr
   roads_sf <- roads_sf_1 %>%
     mutate(RoadUse = case_when((DRA_ROAD_CLASS %in% HighUseCls & DRA_ROAD_SURFACE %in% HighUseSurf) ~ 1, #high use
                                (DRA_ROAD_CLASS %in% LowUseCls | DRA_ROAD_SURFACE %in% LowUseSurf |
-                                  (DRA_ROAD_SURFACE %in% ModUseSurf & is.na(ROAD_NAME_FULL)) |
+                                  (DRA_ROAD_SURFACE %in% ModUseSurf & is.na(DRA_ROAD_NAME_FULL)) |
                                   (is.na(DRA_ROAD_CLASS) & is.na(DRA_ROAD_SURFACE))) ~ 3,#low use
                                TRUE ~ 2)) # all the rest are medium use
 
   #Check the assignment
   Rd_Tbl <- st_set_geometry(roads_sf, NULL) %>%
-    count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS, RoadUse)
+    count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS, is.na(DRA_ROAD_NAME_FULL), RoadUse)
 
+  #Data check
   nrow(roads_sf)-nrow(roads_sf_1)
+  table(roads_sf$RoadUse)
 
   # Save as RDS for quicker access later.
   saveRDS(roads_sf, file = "tmp/DRA_roads_sf_clean.rds")

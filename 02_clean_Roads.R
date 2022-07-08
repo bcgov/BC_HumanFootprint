@@ -39,7 +39,7 @@ if (!file.exists(roads_file)) {
     mutate(DRA_ROAD_CLASS=if_else(is.na(OG_DEV_PRE06_OG_PETRLM_DEV_RD_PRE06_PUB_ID),DRA_ROAD_CLASS,OG_DEV_PRE06_PETRLM_DEVELOPMENT_ROAD_TYPE))
 
   Petro_Tbl <- st_set_geometry(roads_sf_petro, NULL) %>%
-    count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS)
+    dplyr::count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS)
 #### End Petro road check
 
 #Eliminate non-roads
@@ -76,7 +76,7 @@ if (!file.exists(roads_file)) {
 
   #Check the assignment
   Rd_Tbl <- st_set_geometry(roads_sf, NULL) %>%
-    count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS, is.na(DRA_ROAD_NAME_FULL), RoadUse)
+    dplyr::count(DRA_ROAD_SURFACE, DRA_ROAD_CLASS, is.na(DRA_ROAD_NAME_FULL), RoadUse)
 
   #Data check
   nrow(roads_sf)-nrow(roads_sf_1)

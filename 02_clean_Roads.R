@@ -93,7 +93,7 @@ if (!file.exists(roads_file)) {
   #first st_rasterize needs a template to 'burn' the lines onto
   template = BCr_S
   template[[1]][] = NA
-  roadsSR<-st_rasterize(roads_sf[,"RoadUse"], template)
+  roadsSR<-stars::st_rasterize(roads_sf[,"RoadUse"], template)
   write_stars(roadsSR,dsn=file.path(spatialOutDir,'roadsSR.tif'))
 } else {
   #Read in raster roads with values 0-none, 1-high use, 2-moderate use, 3-low use)

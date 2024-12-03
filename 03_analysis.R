@@ -10,17 +10,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-roads_WP<-raster(file.path(spatialOutDir,'roads_WP.tif'))
-disturbance_WP<-raster(file.path(spatialOutDir,'disturbance_WP.tif'))
-disturbanceB_WP<-raster(file.path(spatialOutDir,'disturbanceB_WP.tif'))
+roads_WP<-raster(file.path(spatialOutDir,'roads_WP.tif')) #Low - 3, Medium - 100, High 400 weighting
+disturbance_WP<-raster(file.path(spatialOutDir,'disturbance_WP.tif')) #1 to 1000 weighting depending on type
+disturbanceB_WP<-raster(file.path(spatialOutDir,'disturbanceB_WP.tif')) #Binary - disturbed/not disturbed
 
-#Assign resistance_surface
+#Assign human footprint resistance_surface
 #Combine roads and disturbance areas - assign max weight to pixel
 disturbanceStack<-stack(roads_WP,disturbance_WP)
-resistance_surface_WP<-max(disturbanceStack,na.rm=TRUE)
+resistance_surface_WP<-max(disturbanceStack,na.rm=TRUE) # combine and take highest weight
 saveRDS(resistance_surface_WP,file='tmp/resistance_surface_WP')
 
-#Assign source_surface
+#Assign source_surface for connectivity
 source_surface<-raster(file.path(spatialOutDir,'source_WP.tif'))
 
 #Make binary HF

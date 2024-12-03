@@ -17,16 +17,16 @@ This analysis uses the Province’s Cumulative Effects consolidated roads
 and disturbance layers.
 
 The consolidated roads are available from the B.C. Data Catalogue
-(<https://catalogue.data.gov.bc.ca/dataset/ce-roads-2021>). They are
+(<https://catalogue.data.gov.bc.ca/dataset/bc-cumulative-effects-framework-integrated-roads-current>). They are
 based on the British Columbia [Digital Road Atlas available from the
 B.C. Data
-Catalogue]((https://catalogue.data.gov.bc.ca/dataset/bb060417-b6e6-4548-b837-f9060d94743e))
+Catalogue]((https://catalogue.data.gov.bc.ca/dataset/digital-road-atlas-dra-demographic-partially-attributed-roads))
 and distributed under the [Access Only - B.C. Crown
 Copyright](https://www2.gov.bc.ca/gov/content?id=1AAACC9C65754E4D89A118B875E0FBDA)
 licence.
 
 The consolidated disturbance is available from the B.C. Data Catalogue
-(<https://catalogue.data.gov.bc.ca/dataset/ce-disturbance-2021>).
+(<https://catalogue.data.gov.bc.ca/dataset/bc-cumulative-effects-framework-human-disturbance-current>).
 
 ### Usage
 
@@ -50,13 +50,14 @@ intensive.
 ### Project Status
 
 This project is part of a Provincial conservation assessment being led
-by the Ministry of Environment and Climate Change Strategy. The analysis
+by the Ministry of Water, Land and Resource Stewardship's Biodiversity and Ecosystems Branch. The analysis
 is exploratory.
 
-Updates to the disturbance layer is required, including: seperating
-urban into 1) high, 2) low density, and 3) rural; Modifying cut blocks
-by age to have recent and historic; Modifying range to differentiate
-front and back country range.
+Updates to the disturbance layer is required, including:  
+-   Separating urban into 1) high, 2) low density, and 3) rural;  
+-   Modifying cut blocks by age to have recent and historic;  
+-   Modifying range to differentiate front and back country range;  
+-   Splitting agriculture by intensity. 
 
 Roads are rasterized at 100m and assumes that the ‘footprint’ of a road
 extends 50m on either side of the mid line. Potential modifications

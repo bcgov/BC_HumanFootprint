@@ -11,9 +11,55 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 #Clean Disturbance  Layer
+disturb_file <- file.path(spatialOutDir,"disturbance_sfR.tif")
+if (!file.exists(disturb_file)) {
+    #disturbance_sf<-readRDS(file=dist_file)
+
+  #Fasterize disturbance subgroup
+  disturbance_Tbl <- st_set_geometry(disturbance_sf, NULL) %>%
+    count(CEF_DISTURB_SUB_GROUP, CEF_DISTURB_GROUP)
+  #Fix non-unique sub group codes
+  disturbance_sf <- disturbance_sf %>%
+    mutate(disturb = case_when(!(CEF_DISTURB_SUB_GROUP %in% c('Baseline Thematic Mapping', 'Historic BTM', 'Historic FAIB', 'Current FAIB')) ~ CEF_DISTURB_GROUP,
+                               (CEF_DISTURB_GROUP == 'Agriculture_and_Clearing' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'Agriculture_and_Clearing',
+                               (CEF_DISTURB_GROUP == 'Mining_and_Extraction' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'Mining_and_Extraction',
+                               (CEF_DISTURB_GROUP == 'Urban' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'Urban',
+                               (CEF_DISTURB_GROUP == 'Cutblocks' & CEF_DISTURB_SUB_GROUP == 'Current FAIB') ~ 'Cutblocks_Current',
+                                (CEF_DISTURB_GROUP == 'Cutblocks' & CEF_DISTURB_SUB_GROUP == 'Historic FAIB') ~ 'Cutblocks_Historic',
+                                 (CEF_DISTURB_GROUP == 'Cutblocks' & CEF_DISTURB_SUB_GROUP == 'Historic BTM') ~ 'Cutblocks_Historic',
+                                  TRUE ~ 'Unkown'))
+
+   disturbance_Tbl <- st_set_geometry(disturbance_sf, NULL) %>%
+    count(CEF_DISTURB_SUB_GROUP, CEF_DISTURB_GROUP, disturb)
+  WriteXLS(disturbance_Tbl,file.path(DataDir,'disturbance_Tbl.xlsx'))
+
+  Unique_disturb<-unique(disturbance_sf$disturb)
+  AreaDisturbance_LUT<-data.frame(disturb_Code=1:length(Unique_disturb),disturb=Unique_disturb)
+
+
+  #Write out LUT and populate with resistance weights and source scores
+  WriteXLS(AreaDisturbance_LUT,file.path(DataDir,'AreaDisturbance_LUT.xlsx'))
+
+AreaDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,'AreaDisturbance_LUT.xlsx'))) %>%
+    dplyr::select(disturb,ID=disturb_Code,Resistance,SourceWt, BinaryHF)
+
+  disturbance_sfR1 <- disturbance_sf %>%
+    left_join(AreaDisturbance_LUT) %>%
+    st_cast("MULTIPOLYGON")
+
+  disturbance_sfR<- fasterize(disturbance_sfR1, BCr, field="ID")
+
+  saveRDS(disturbance_sfR,file='tmp/disturbance_sfR')
+  writeRaster(disturbance_sfR, filename=file.path(spatialOutDir,'disturbance_sfR'), format="GTiff", overwrite=TRUE)
+
+} else {
+  disturbance_sf<-readRDS(file=disturb_file)
+  disturbance_sfR<-raster(file.path(spatialOutDir,'disturbance_sfR.tif'))
+}
+
 
 #Assign weights to layer - based on values in spreadsheet built off raster's legend in data directory
-AreaDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,'AreaDisturbance_LUT.xlsx'))) %>%
+AreaDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,'AreaDisturbance_LUTH.xlsx'))) %>%
   dplyr::select(ID=disturb_Code,Resistance,SourceWt, BinaryHF)
 
 #Provincial weights

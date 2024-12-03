@@ -41,91 +41,51 @@ if (!file.exists(BCr_file)) {
 }
 
 #################
-#Function to download to local directory - https://stackoverflow.com/questions/14426359/downloading-large-files-with-r-rcurl-efficiently
-CE_downloadFn = function(url, file){
-  library('RCurl')
-  f = CFILE(file, mode="wb")
-  a = curlPerform(url = url, writedata = f@ref, noprogress=FALSE)
-  close(f)
-  return(a)
-}
-
+#Download latest CE integrated roads layer - current is 2024
 rd_file<-'tmp/roads_sf_in'
 if (!file.exists(rd_file)) {
-  #Download CE road data
-  CE_downloadFn("https://nrs.objectstore.gov.bc.ca/bsmheo/BC_CEF_Integrated_Roads_2021.gdb.zip",
-                file.path(SpatialDir,"CE_Roads_2021.zip"))
-  #Unzip and put gdb in local SpatialDir
-  unzip(file.path(SpatialDir,"CE_Roads_2021.zip"), exdir = SpatialDir)
-
+  #Download CE road data -   #https://catalogue.data.gov.bc.ca/dataset/bc-cumulative-effects-framework-integrated-roads-current
+  url<-'https://coms.api.gov.bc.ca/api/v1/object/1d3d61b0-1f33-4608-837a-ee0b0ac4264e'
+  CE_rd<-"CE_roads.zip"
+  #use URL to download CE road file
+  download.file(url, file.path(RoadsDir, CE_rd), mode = "wb")
+  #unzip into roads directory with 'gdb' holder file
+  unzip(file.path(RoadsDir,CE_rd), exdir = file.path(RoadsDir,'CE_roads.gdb'),junkpaths=TRUE)
   #Read gdb and select layer for sf_read
-  Roads_gdb <- list.files(file.path(SpatialDir), pattern = "_Roads_", full.names = TRUE)[1]
+  Roads_gdb <- list.files(file.path(RoadsDir), pattern = "gdb", full.names = TRUE)[1]
   st_layers(file.path(Roads_gdb))
-
-  roads_sf_in <- read_sf(Roads_gdb, layer = "integrated_roads_2021")
+  #Read file and save to temp directory
+  roads_sf_in <- read_sf(Roads_gdb, layer = "integrated_roads_2024")
   saveRDS(roads_sf_in,file=rd_file)
 } else {
   roads_sf_in<-readRDS(file=rd_file)
 }
 
-#Provincial Human Disturbance Layers - compiled for CE
+##Download latest Provincial Human Disturbance Layers compiled for CE - current is 2023
 #Needs refinement to differentiate rural/urban and old vs young cutblocks, rangeland, etc.
 dist_file<-'tmp/disturbance_sf'
 if (!file.exists(dist_file)) {
-  #Download CE disturbance data
-  CE_downloadFn("https://nrs.objectstore.gov.bc.ca/bsmheo/BC_CEF_Human_Disturbance_2021.gdb.zip",
-                                  file.path(SpatialDir,"CE_Disturb_2021.zip"))
-  #Unzip and put gdb in local SpatialDir
-  unzip(file.path(SpatialDir,"CE_Disturb_2021.zip"), exdir = SpatialDir)
-
+  #Download CE road data -  https://catalogue.data.gov.bc.ca/dataset/bc-cumulative-effects-framework-human-disturbance-current
+  url<-'https://coms.api.gov.bc.ca/api/v1/object/ecea4b04-055a-49d1-8910-60d726d2d1bf'
+  CE_dist<-"CE_disturb.zip"
+  #use URL to download CE road file
+  download.file(url, file.path(DisturbDir, CE_dist), mode = "wb")
+  #unzip into disturbance directory with 'gdb' holder file
+  unzip(file.path(DisturbDir,CE_dist), exdir = file.path(DisturbDir,'CE_disturb.gdb'),junkpaths=TRUE)
   #Read gdb and select layer for sf_read
-  disturbance_gdb <- list.files(file.path(SpatialDir), pattern = "_Disturbance_", full.names = TRUE)[1]
-  st_layers(BC_CEF_Human_Disturbance_2021.gdb)
-
-  disturbance_sf <- read_sf(BC_CEF_Human_Disturbance_2021.gdb, layer = "BC_CEF_Human_Disturb_BTM_2021_merge")
-  saveRDS(disturbance_sf,file=dist_file)
-  disturbance_sf<-readRDS(file=dist_file)
-  #Fasterize disturbance subgroup
-  disturbance_Tbl <- st_set_geometry(disturbance_sf, NULL) %>%
-    count(CEF_DISTURB_SUB_GROUP, CEF_DISTURB_GROUP)
-  #Fix non-unique sub group codes
-  disturbance_sf <- disturbance_sf %>%
-    mutate(disturb = case_when(!(CEF_DISTURB_SUB_GROUP %in% c('Baseline Thematic Mapping', 'Historic BTM', 'Historic FAIB', 'Current FAIB')) ~ CEF_DISTURB_GROUP,
-                               (CEF_DISTURB_GROUP == 'Agriculture_and_Clearing' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'Agriculture_and_Clearing',
-                               (CEF_DISTURB_GROUP == 'Mining_and_Extraction' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'Mining_and_Extraction',
-                               (CEF_DISTURB_GROUP == 'Urban' & CEF_DISTURB_SUB_GROUP == 'Baseline Thematic Mapping') ~ 'Urban',
-                               (CEF_DISTURB_GROUP == 'Cutblocks' & CEF_DISTURB_SUB_GROUP == 'Current FAIB') ~ 'Cutblocks_Current',
-                                (CEF_DISTURB_GROUP == 'Cutblocks' & CEF_DISTURB_SUB_GROUP == 'Historic FAIB') ~ 'Cutblocks_Historic',
-                                 (CEF_DISTURB_GROUP == 'Cutblocks' & CEF_DISTURB_SUB_GROUP == 'Historic BTM') ~ 'Cutblocks_Historic',
-                                  TRUE ~ 'Unkown'))
-
-   disturbance_Tbl <- st_set_geometry(disturbance_sf, NULL) %>%
-    count(CEF_DISTURB_SUB_GROUP, CEF_DISTURB_GROUP, disturb)
-  WriteXLS(disturbance_Tbl,file.path(DataDir,'disturbance_Tbl.xlsx'))
-
-  Unique_disturb<-unique(disturbance_sf$disturb)
-  AreaDisturbance_LUT<-data.frame(disturb_Code=1:length(Unique_disturb),disturb=Unique_disturb)
-
-
-  #Write out LUT and populate with resistance weights and source scores
-  WriteXLS(AreaDisturbance_LUT,file.path(DataDir,'AreaDisturbance_LUT.xlsx'))
-
-AreaDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,'AreaDisturbance_LUT.xlsx'))) %>%
-    dplyr::select(disturb,ID=disturb_Code,Resistance,SourceWt, BinaryHF)
-
-  disturbance_sfR1 <- disturbance_sf %>%
-    left_join(AreaDisturbance_LUT) %>%
-    st_cast("MULTIPOLYGON")
-
-  disturbance_sfR<- fasterize(disturbance_sfR1, BCr, field="ID")
-
-  saveRDS(disturbance_sfR,file='tmp/disturbance_sfR')
-  writeRaster(disturbance_sfR, filename=file.path(spatialOutDir,'disturbance_sfR'), format="GTiff", overwrite=TRUE)
-
+  Disturb_gdb <- list.files(file.path(DisturbDir), pattern = "gdb", full.names = TRUE)[1]
+  st_layers(file.path(Disturb_gdb))
+  #Read file and save to temp directory
+  disturbance_sf_in <- read_sf(Disturb_gdb, layer = "BC_CEF_Human_Disturb_BTM_2023")
+  saveRDS(disturbance_sf_in,file=dist_file)
 } else {
-  disturbance_sf<-readRDS(file=dist_file)
-  disturbance_sfR<-raster(file.path(spatialOutDir,'disturbance_sfR.tif'))
+  disturbance_sf_in<-readRDS(file=dist_file)
 }
+
+message('Breaking')
+break
+
+############
 
 
 ##########################

@@ -54,13 +54,13 @@ if (!file.exists(roads_file)) {
                 "Road collector major","Road collector minor","Road ramp","Road freeway",
                 "Road yield lane")
 
-   ModUseCls<-c("Road local","Road recreation","Road alleyway","Road restricted",
+  ModUseCls<-c("Road local","Road recreation","Road alleyway","Road restricted",
                "Road service","Road resource","Road driveway","Road strata",
                "Road resource demographic", "Road strata","Road recreation demographic", "Trail Recreation",
-               "Road runway", "Road runway non-demographic", "Road resource non-status" )
+               "Road runway", "Road runway non-demographic", "Road resource non-status","Road unclassified or unknown")
 
   LowUseCls<-c("Road lane","Road skid","Road trail","Road pedestrian","Road passenger",
-               "Road unclassified or unknown","Trail", "Trail demographic","Trail skid", "Road pedestrian mall")
+               "Trail", "Trail demographic","Trail skid", "Road pedestrian mall")
 
   HighUseSurf<-c("paved")
   ModUseSurf<-c("loose","rough")
@@ -105,7 +105,7 @@ if (!file.exists(roads_file)) {
 LinearDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,paste('LinearDisturbance.xlsx',sep='')),sheet='LinearDisturbance')) %>%
   dplyr::select(ID,Resistance,SourceWt,BinaryHF)
 
-#By Prov
+#By Prov, road weight - 1ha pixel - 50m each side of road
 roads_WP<-subs(roadsR, LinearDisturbance_LUT, by='ID',which='Resistance')
 writeRaster(roads_WP, filename=file.path(spatialOutDir,'roads_WP'), format="GTiff", overwrite=TRUE)
 #Do Binary version
@@ -114,7 +114,7 @@ writeRaster(roadsB_W, filename=file.path(spatialOutDir,'roadsB_W'), format="GTif
 
 #########
 #Do similar analysis but split into 3 rasters, High(1), Med(2), Low(3)
-#Generate buffers for each 500m for 1 100m annd 500m for 2 and 50m for 3
+#Generate buffers for each 500m for 1 100m and 500m for 2 and 50m for 3
 #Use gpkg created above
 roads_clean<-st_read(file.path(spatialOutDir,"roads_clean.gpkg"))
 

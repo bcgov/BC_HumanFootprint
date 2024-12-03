@@ -20,6 +20,7 @@ writeRaster(source_surface, filename=file.path(CorrDir,'source_surface.tif'), fo
 
 #Plot resistance and source layers
 resistance_surface<-raster(file.path(CorrDir,"resistance_surface.tif"))
+HillShade <-raster(file.path(GISLibrary,'GRIDS/hillshade_BC.tif'))
 
 #resistance_surface<-resistance_surface %>%
 #  mask(AOI) %>%

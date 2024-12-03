@@ -26,7 +26,7 @@ source("02_clean_Area.R")
 source("02_clean_Roads.R")
 
 source("03_analysis.R")
-#run it you want to use for doing binary intact lands
+#run it you want to use for doing binary intact lands, sets all disturbance to 1
 source("03_analysis_BinaryIntact.R")
 
 source("04_output.R")

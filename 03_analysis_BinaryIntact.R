@@ -13,12 +13,12 @@
 #Assign resistance_surface
 #Combine roads and disturbance areas - assign max weight to pixel
 disturbanceB_WP<-raster(file.path(spatialOutDir,'disturbanceB_WP.tif'))
-roadsHR<-raster(file.path(spatialOutDir,'roadsHR.tif'))
-roadsMR<-raster(file.path(spatialOutDir,'roadsMR.tif'))
-roadsML<-raster(file.path(spatialOutDir,'roadsLR.tif'))
+roadsHR<-raster(file.path(spatialOutDir,'roadsHR.tif')) #HR - high use roads 500m buffer
+roadsMR<-raster(file.path(spatialOutDir,'roadsMR.tif')) #MR - medium use roads 100m buffer
+roadsML<-raster(file.path(spatialOutDir,'roadsLR.tif')) #ML - low use roads 100m buffer
 
 BinaryStack<-stack(disturbanceB_WP, roadsHR, roadsMR, roadsLR)
-HFBinary<-max(BinaryStack,na.rm=TRUE)
+HFBinary<-max(BinaryStack,na.rm=TRUE) #if any present then use - max 1, else 0
 IntactBinary<-HFBinary
 IntactBinary[IntactBinary>0]<-2
 IntactBinary[is.na(IntactBinary)]<-1

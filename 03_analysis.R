@@ -16,8 +16,19 @@ disturbanceB_WP<-raster(file.path(spatialOutDir,'disturbanceB_WP.tif')) #Binary 
 
 #Assign human footprint resistance_surface
 #Combine roads and disturbance areas - assign max weight to pixel
+<<<<<<< Updated upstream
 disturbanceStack<-stack(roads_WP,disturbance_WP)
 resistance_surface_WP<-max(disturbanceStack,na.rm=TRUE) # combine and take highest weight
+=======
+disturbanceStack<-rast(list(disturbance_WP,roadsR_buffered,cblock_sf_raster_WP,water_buffered))
+resistance_surface_WP<-max(disturbanceStack,na.rm=T)
+
+#clip to boundary:
+resistance_surface_WP<-crop(resistance_surface_WP,BC,mask=T)
+
+#saving
+resistance_surface_WP<-writeRaster(resistance_surface_WP,file.path(spatialOutDir,'resistance_surface_WP.tif'),overwrite=T)
+>>>>>>> Stashed changes
 saveRDS(resistance_surface_WP,file='tmp/resistance_surface_WP')
 
 #Assign source_surface for connectivity
@@ -56,8 +67,25 @@ resistance_surface<-resistance_surface_WP %>%
   crop(AOI)
 
 #Assign source_surface
+<<<<<<< Updated upstream
 source_surface<-source_WP %>%
   mask(AOI) %>%
   crop(AOI)
+=======
+source_surface<-rast(list(roadsB_W, #secondary roads as source only, buffered
+                          source_cutblock, #cutblocks
+                          water_source, #freshwater, buffered
+                          source_WP)) #other sources
+source_surface<-min(source_surface,na.rm = T)
+
+#clip to boundary:
+source_surface<-crop(source_surface,BC,mask=T)
+
+#Saving
+writeRaster(source_surface,file.path(spatialOutDir,'source_surface.tif'),overwrite=T)
+saveRDS(source_surface,file='tmp/source_surface.rds')
+source_surface<-readRDS('tmp/source_surface.rds')
+
+>>>>>>> Stashed changes
 
 

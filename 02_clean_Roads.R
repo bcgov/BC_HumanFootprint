@@ -93,9 +93,33 @@ if (!file.exists(roads_file)) {
   #first st_rasterize needs a template to 'burn' the lines onto
   template = BCr_S
   template[[1]][] = NA
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
   roadsSR<-stars::st_rasterize(roads_sf[,"RoadUse"], template)
   write_stars(roadsSR,dsn=file.path(spatialOutDir,'roadsSR.tif'))
 } else {
+=======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+  roadsR<-stars::st_rasterize(roads_sf[,"RoadUse"], template)
+  write_stars(roadsR,dsn=file.path(spatialOutDir,'roadsSR.tif'))
+  roadsR<-terra::rast(file.path(spatialOutDir,'roadsSR.tif'))
+
+  ###removing some files to avoid memory issues:
+  remove(roads_sf_petro)
+  remove(roads_sf)
+  remove(roads_sf_in)
+  remove(roads_sf_1)
+
+
+  } else {
+>>>>>>> Stashed changes
   #Read in raster roads with values 0-none, 1-high use, 2-moderate use, 3-low use)
   roadsR<-raster(file.path(spatialOutDir,'roadsSR.tif'))
 }
@@ -124,9 +148,24 @@ roadsH<-roads_clean %>%
   dplyr::filter(RoadUse==1) %>%
   mutate(RastID=1)
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 roadsH1<- roadsH %>%
   st_buffer(dist=500) %>%
   st_union()
+=======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+####Buffering Roads and adding resistance weights####
+#get each use level in a different raster:
+roads_buf_file <- file.path(spatialOutDir,"roadsSR_buffered.tif")
+>>>>>>> Stashed changes
 
 write_sf(roadsH1, file.path(spatialOutDir,"roadsH1.gpkg"), overwrite=TRUE)
 roadsH1<-st_read(file.path(spatialOutDir,"roadsH1.gpkg")) %>%
@@ -170,6 +209,10 @@ roadsMR500<-roadsM1_500 %>%
 
 writeRaster(roadsMR500, filename=file.path(spatialOutDir,'roadsMR500'), format="GTiff", overwrite=TRUE)
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #Set Low roads - use previously processed Stars tif with 3 road use classes
 roadsSR<-raster(file.path(spatialOutDir,'roadsSR.tif'))
 roadsLR<-roadsSR
@@ -177,6 +220,39 @@ roadsLR<-roadsSR
 roadsLR[roadsLR<3]<-NA
 roadsLR[roadsLR==3]<-1
 writeRaster(roadsLR, filename=file.path(spatialOutDir,'roadsLR'), format="GTiff", overwrite=TRUE)
+=======
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+writeRaster(roadsR_buffered,file.path(spatialOutDir,"roadsSR_buffered.tif"),overwrite=T)
+
+roadsR_buffered<-rast(file.path(spatialOutDir,"roadsSR_buffered.tif"))
+saveRDS(roadsR_buffered,file.path(spatialOutDir,"roadsSR_buffered.rds"))
+
+}else{
+  roadsR_buffered<-rast(file.path(spatialOutDir,"roadsSR_buffered.tif"))
+
+}
+
+
+###Roads - source surface####
+
+
+roadsB_W_file<-file.path(spatialOutDir,"roadsB_W.tif")
+if (!file.exists(roadsB_W_file)) {
+
+roadsB_W1<-subst(roadsR, c(1,2,3,0), c(NA,NA,1,NA))
+roadsB_W_b<-buffer(roadsB_W1,width=100,background=NA)
+roadsB_W<-subst(roadsB_W_b,c(0,1),c(0.75,.5))
+
+writeRaster(roadsB_W, filename=file.path(spatialOutDir,'roadsB_W.tif'), overwrite=TRUE)
+}else{
+  roadsB_W<-rast(file.path(spatialOutDir,"roadsB_W.tif"))
+}
+>>>>>>> Stashed changes
 
 ##############
 #Clip by AOI

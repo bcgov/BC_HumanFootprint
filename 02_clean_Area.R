@@ -63,8 +63,21 @@ AreaDisturbance_LUT<-data.frame(read_excel(file.path(DataDir,'AreaDisturbance_LU
   dplyr::select(ID=disturb_Code,Resistance,SourceWt, BinaryHF)
 
 #Provincial weights
+<<<<<<< Updated upstream
 disturbance_WP<-subs(raster(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT, by='ID',which='Resistance')
 writeRaster(disturbance_WP, filename=file.path(spatialOutDir,'disturbance_WP'), format="GTiff", overwrite=TRUE)
+=======
+disturbance_WP_file <- file.path(spatialOutDir,"disturbance_WP.tif")
+if (!file.exists(disturbance_WP_file)) {
+  disturbance_WP<-subst(rast(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT$ID,to=AreaDisturbance_LUT$Resistance)
+  writeRaster(disturbance_WP, file.path(spatialOutDir,'disturbance_WP.tif'), overwrite=TRUE)
+
+ }else{
+   disturbance_WP<-raster(file.path(spatialOutDir,'disturbance_WP.tif'))
+ }
+
+
+>>>>>>> Stashed changes
 
 #Binary Version
 disturbanceB_WP<-subs(raster(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT, by='ID',which='BinaryHF')
@@ -79,8 +92,25 @@ writeRaster(disturbanceB_WP, filename=file.path(spatialOutDir,'disturbanceB_WP')
 #uses same layer disturbance layer but assigns different values
 
 #Provincial source
+<<<<<<< Updated upstream
 source_WP<-subs(raster(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT, by='ID',which='SourceWt')
 writeRaster(source_WP, filename=file.path(spatialOutDir,'source_WP'), format="GTiff", overwrite=TRUE)
+=======
+source_WP_file <- file.path(spatialOutDir,"source_WP.tif")
+if (!file.exists(source_WP_file)) {
+
+source_WP<-subst(rast(file.path(spatialOutDir,'disturbance_sfR.tif')), AreaDisturbance_LUT$ID,AreaDisturbance_LUT$SourceWt)
+writeRaster(source_WP, filename=file.path(spatialOutDir,'source_WP.tif'), overwrite=TRUE)
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
 ##################
 ##Clipping to AOI
